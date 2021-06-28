@@ -1,0 +1,1 @@
+az deployment group create --name DeployLocalTemplate  --resource-group  {1-5e248380-playground-sandbox} --template-file vnets.json --verbose

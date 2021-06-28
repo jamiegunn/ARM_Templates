@@ -1,0 +1,161 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetworks_VNet_OnPrem_name": {
+      "type": "String"
+    },
+    "virtualNetworks_VNet_Spoke_name": {
+      "type": "String"
+    },
+    "virtualNetworks_VNet_hub_name": {
+      "type": "String"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2020-11-01",
+      "location": "eastus",
+      "name": "[parameters('virtualNetworks_VNet_hub_name')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.5.0.0/16"
+          ]
+        },
+        "enableDdosProtection": false,
+        "subnets": [
+          {
+            "name": "AzureFirewallSubnet",
+            "properties": {
+              "addressPrefix": "10.5.0.0/26",
+              "delegations": [],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+          }
+        ],
+        "virtualNetworkPeerings": []
+      },
+      "type": "Microsoft.Network/virtualNetworks"
+    },
+    {
+      "apiVersion": "2020-11-01",
+      "location": "eastus",
+      "name": "[parameters('virtualNetworks_VNet_OnPrem_name')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "192.168.0.0/16"
+          ]
+        },
+        "enableDdosProtection": false,
+        "subnets": [
+          {
+            "name": "SN-Corp",
+            "properties": {
+              "addressPrefix": "192.168.1.0/24",
+              "delegations": [],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "192.168.2.0/24",
+              "delegations": [],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+          }
+        ],
+        "virtualNetworkPeerings": []
+      },
+      "type": "Microsoft.Network/virtualNetworks"
+    },
+    {
+      "apiVersion": "2020-11-01",
+      "location": "eastus",
+      "name": "[parameters('virtualNetworks_VNet_Spoke_name')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.6.0.0/16"
+          ]
+        },
+        "enableDdosProtection": false,
+        "subnets": [
+          {
+            "name": "SN-Workload",
+            "properties": {
+              "addressPrefix": "10.6.0.0/24",
+              "delegations": [],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+          }
+        ],
+        "virtualNetworkPeerings": []
+      },
+      "type": "Microsoft.Network/virtualNetworks"
+    },
+    {
+      "apiVersion": "2020-11-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VNet_hub_name'))]"
+      ],
+      "name": "[concat(parameters('virtualNetworks_VNet_hub_name'), '/AzureFirewallSubnet')]",
+      "properties": {
+        "addressPrefix": "10.5.0.0/26",
+        "delegations": [],
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      },
+      "type": "Microsoft.Network/virtualNetworks/subnets"
+    },
+    {
+      "apiVersion": "2020-11-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VNet_OnPrem_name'))]"
+      ],
+      "name": "[concat(parameters('virtualNetworks_VNet_OnPrem_name'), '/GatewaySubnet')]",
+      "properties": {
+        "addressPrefix": "192.168.2.0/24",
+        "delegations": [],
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      },
+      "type": "Microsoft.Network/virtualNetworks/subnets"
+    },
+    {
+      "apiVersion": "2020-11-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VNet_OnPrem_name'))]"
+      ],
+      "name": "[concat(parameters('virtualNetworks_VNet_OnPrem_name'), '/SN-Corp')]",
+      "properties": {
+        "addressPrefix": "192.168.1.0/24",
+        "delegations": [],
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      },
+      "type": "Microsoft.Network/virtualNetworks/subnets"
+    },
+    {
+      "apiVersion": "2020-11-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_VNet_Spoke_name'))]"
+      ],
+      "name": "[concat(parameters('virtualNetworks_VNet_Spoke_name'), '/SN-Workload')]",
+      "properties": {
+        "addressPrefix": "10.6.0.0/24",
+        "delegations": [],
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      },
+      "type": "Microsoft.Network/virtualNetworks/subnets"
+    }
+  ],
+  "variables": {}
+}
